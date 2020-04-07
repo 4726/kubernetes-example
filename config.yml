@@ -1,0 +1,5 @@
+db:
+  addr: redis:6379
+  password:
+  db: 0
+addr: :14000

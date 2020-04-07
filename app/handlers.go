@@ -20,12 +20,16 @@ func GetKV(c *gin.Context, db *redis.Client) {
 		c.JSON(http.StatusBadRequest, Response{
 			Error: "invalid request",
 		})
+		return
 	}
 	var value string
 	if err := db.Get(req.Key).Scan(&value); err != nil {
-		c.JSON(http.StatusInternalServerError, Response{
-			Error: "internal server error",
-		})
+		if err != redis.Nil {
+			c.JSON(http.StatusInternalServerError, Response{
+				Error: "internal server error",
+			})
+			return
+		}
 	}
 	c.JSON(http.StatusOK, Response{
 		Key:     req.Key,
@@ -42,11 +46,13 @@ func SetKV(c *gin.Context, db *redis.Client) {
 		c.JSON(http.StatusBadRequest, Response{
 			Error: "invalid request",
 		})
+		return
 	}
 	if err := db.Set(req.Key, req.Value, 0).Err(); err != nil {
 		c.JSON(http.StatusInternalServerError, Response{
 			Error: "internal server error",
 		})
+		return
 	}
 	c.JSON(http.StatusOK, Response{
 		Key:     req.Key,
@@ -63,11 +69,13 @@ func DeleteKV(c *gin.Context, db *redis.Client) {
 		c.JSON(http.StatusBadRequest, Response{
 			Error: "invalid request",
 		})
+		return
 	}
 	if err := db.Del(req.Key).Err(); err != nil {
 		c.JSON(http.StatusInternalServerError, Response{
 			Error: "internal server error",
 		})
+		return
 	}
 	c.JSON(http.StatusOK, Response{
 		Key:     req.Key,

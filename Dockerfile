@@ -6,4 +6,9 @@ COPY . .
 RUN go get -d -v ./...
 RUN go install -v ./...
 
-CMD ["kubernetes-example"]
+CMD ["./kubernetes-example"]
+
+EXPOSE 14000
+
+# docker build -t kubernetes-example .
+# docker run -p 14000:14000 -it --rm --name kubernetes-example-running kubernetes-example
