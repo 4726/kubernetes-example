@@ -16,6 +16,7 @@ type Redis struct {
 	DB             int
 }
 
+//FromFile returns a new Config object from path
 func FromFile(path string) (Config, error) {
 	var conf Config
 	content, err := ioutil.ReadFile(path)

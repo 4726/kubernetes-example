@@ -1,18 +1,20 @@
 package app
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis"
 )
 
+// Response is the http response for requests
 type Response struct {
 	Key, Value, Error string
 	Success           bool
 }
 
-func GetKV(c *gin.Context, db *redis.Client) {
+func getKV(c *gin.Context, db *redis.Client) {
 	req := struct {
 		Key string
 	}{}
@@ -20,6 +22,7 @@ func GetKV(c *gin.Context, db *redis.Client) {
 		c.JSON(http.StatusBadRequest, Response{
 			Error: "invalid request",
 		})
+		log.Println("json error: ", err)
 		return
 	}
 	var value string
@@ -28,6 +31,7 @@ func GetKV(c *gin.Context, db *redis.Client) {
 			c.JSON(http.StatusInternalServerError, Response{
 				Error: "internal server error",
 			})
+			log.Println("internal server error: ", err)
 			return
 		}
 	}
@@ -38,7 +42,7 @@ func GetKV(c *gin.Context, db *redis.Client) {
 	})
 }
 
-func SetKV(c *gin.Context, db *redis.Client) {
+func setKV(c *gin.Context, db *redis.Client) {
 	req := struct {
 		Key, Value string
 	}{}
@@ -46,12 +50,14 @@ func SetKV(c *gin.Context, db *redis.Client) {
 		c.JSON(http.StatusBadRequest, Response{
 			Error: "invalid request",
 		})
+		log.Println("json error: ", err)
 		return
 	}
 	if err := db.Set(req.Key, req.Value, 0).Err(); err != nil {
 		c.JSON(http.StatusInternalServerError, Response{
 			Error: "internal server error",
 		})
+		log.Println("internal server error: ", err)
 		return
 	}
 	c.JSON(http.StatusOK, Response{
@@ -61,7 +67,7 @@ func SetKV(c *gin.Context, db *redis.Client) {
 	})
 }
 
-func DeleteKV(c *gin.Context, db *redis.Client) {
+func deleteKV(c *gin.Context, db *redis.Client) {
 	req := struct {
 		Key string
 	}{}
@@ -69,12 +75,14 @@ func DeleteKV(c *gin.Context, db *redis.Client) {
 		c.JSON(http.StatusBadRequest, Response{
 			Error: "invalid request",
 		})
+		log.Println("json error: ", err)
 		return
 	}
 	if err := db.Del(req.Key).Err(); err != nil {
 		c.JSON(http.StatusInternalServerError, Response{
 			Error: "internal server error",
 		})
+		log.Println("internal server error: ", err)
 		return
 	}
 	c.JSON(http.StatusOK, Response{

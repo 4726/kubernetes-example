@@ -1,7 +1,10 @@
 package app
 
 import (
+	"context"
 	"log"
+	"net/http"
+	"time"
 
 	"github.com/4726/kubernetes-example/config"
 	"github.com/gin-gonic/gin"
@@ -12,8 +15,10 @@ type App struct {
 	db     *redis.Client
 	engine *gin.Engine
 	conf   config.Config
+	srv    *http.Server
 }
 
+//New returns a new App
 func New(conf config.Config) *App {
 	db := redis.NewClient(&redis.Options{
 		Addr:     conf.DB.Addr,
@@ -37,25 +42,34 @@ func New(conf config.Config) *App {
 
 func (a *App) initRoutes() {
 	a.engine.GET("/kv", func(c *gin.Context) {
-		GetKV(c, a.db)
+		getKV(c, a.db)
 	})
 
 	a.engine.POST("/kv", func(c *gin.Context) {
-		SetKV(c, a.db)
+		setKV(c, a.db)
 	})
 
 	a.engine.DELETE("/kv", func(c *gin.Context) {
-		DeleteKV(c, a.db)
+		deleteKV(c, a.db)
 	})
 }
 
+//Run runs the app and blocks until an error occurs
 func (a *App) Run() {
+	a.srv = &http.Server{
+		Addr:    a.conf.Addr,
+		Handler: a.engine,
+	}
 	log.Println("starting server on addr: ", a.conf.Addr)
-	if err := a.engine.Run(a.conf.Addr); err != nil {
+	if err := a.srv.ListenAndServe(); err != nil {
 		log.Fatal(err)
 	}
 }
 
+//Close gracefully shuts down the server
 func (a *App) Close() error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	a.srv.Shutdown(ctx)
 	return a.db.Close()
 }
